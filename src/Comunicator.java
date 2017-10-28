@@ -6,66 +6,67 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 
-public class ChatClient {
+public class Comunicator {
+    private static final Logger LOG = Logger.getLogger(Comunicator.class.getName());
     private Socket socket = null;
     private Scanner console = null;
     private BufferedWriter streamOut = null;
     private BufferedReader streamIn = null;
 
 
-    public ChatClient(String serverName, int serverPort) {
-        System.out.println("Establishing connection. Please wait ...");
+    public Comunicator(String serverName, int serverPort) {
+        LOG.info("Establishing connection. Please wait ...");
         try {
             socket = new Socket(serverName, serverPort);
-            System.out.println("Connected: " + socket);
+            LOG.info("Connected: " + socket);
             start();
             listenToServer();
-            writeToServer();
         } catch (UnknownHostException uhe) {
-            System.out.println("Host unknown: " + uhe.getMessage());
+            LOG.warning("Host unknown: " + uhe.getMessage());
         } catch (IOException ioe) {
-            System.out.println("Unexpected exception: " + ioe.getMessage());
-        }      
-        stop();
-    }
-    public void writeToServer(){
-        String line = "";
-        while (!line.equals(".bye")) {
-            try {
-                line = console.nextLine();
-                streamOut.write(line + "\n");
-                streamOut.flush();
-            } catch (IOException ioe) {
-                System.out.println("Sending error: " + ioe.getMessage());
-            }
+            LOG.warning("Unexpected exception: " + ioe.getMessage());
         }
     }
-    public void listenToServer(){
+
+
+    public void writeToServer(String line) {
+        try {
+            streamOut.write(line + "\n");
+            streamOut.flush();
+        } catch (IOException ioe) {
+            LOG.warning("Sending error: " + ioe.getMessage());
+        }
+
+    }
+
+
+    public void listenToServer() {
         Thread thread = new Thread(new Runnable() {
-            
+
             @Override
             public void run() {
-                while(true){
+                while (true) {
                     try {
-                        if(streamIn.ready()){
+                        if (streamIn.ready()) {
                             System.out.println(streamIn.readLine());
                         }
                         Thread.sleep(10);
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-                    }catch(InterruptedException e){
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                   
+
                 }
-                
+
             }
         });
         thread.start();
-        
+
     }
 
 
@@ -85,14 +86,8 @@ public class ChatClient {
             if (socket != null)
                 socket.close();
         } catch (IOException ioe) {
-            System.out.println("Error closing ...");
+            LOG.warning("Error closing ...");
         }
     }
 
-
-    public static void main(String args[]) {
-        ChatClient client;
-
-        client = new ChatClient("192.168.56.101", Integer.parseInt("8882"));
-    }
 }
