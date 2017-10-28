@@ -34,6 +34,8 @@ public class Tabbed extends JPanel {
         close.addActionListener(new CloseTab(this));
         send.addActionListener(new SendMessageButton());
         forWriting.addKeyListener(new SendMessageKey());
+        forReading.setLineWrap(true);
+        forWriting.setLineWrap(true);
     }
 
 
@@ -97,6 +99,7 @@ public class Tabbed extends JPanel {
         public void actionPerformed(ActionEvent e) {
             forReading.append(forWriting.getText() + "\n");
             forWriting.setText("");
+            forWriting.grabFocus();
 
         }
 
