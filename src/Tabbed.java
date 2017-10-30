@@ -1,14 +1,16 @@
-import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import javax.swing.BorderFactory;
+import java.util.List;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -16,37 +18,44 @@ public class Tabbed extends JPanel {
 
     private JTextArea forReading = new JTextArea();
     private JTextArea forWriting = new JTextArea();
-    private JTextArea users = new JTextArea();
+
     private JButton send = new JButton("Send");
     private JButton close = new JButton("Close");
     private JTabbedPane tabbedPane;
     private JScrollPane forRsp = new JScrollPane(forReading);
     private JScrollPane forWsp = new JScrollPane(forWriting);
+    private String addressee;
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
 
 
-    public Tabbed(JTabbedPane tabbedPane) {
+    public Tabbed(JTabbedPane tabbedPane, String addressee) {
         this.tabbedPane = tabbedPane;
+        this.addressee = addressee;
         createChatPanel();
         close.addActionListener(new CloseTab(this));
         send.addActionListener(new SendMessageButton());
         forWriting.addKeyListener(new SendMessageKey());
         forReading.setLineWrap(true);
         forWriting.setLineWrap(true);
+        setFont();
+    }
+
+
+    private void setFont() {
+        Font font = new Font(Font.MONOSPACED, Font.PLAIN, 19);
+        forReading.setFont(font);
+        forWriting.setFont(font);
     }
 
 
     private void createChatPanel() {
         setLayout(new MigLayout());
-//        forReading.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-//        forWriting.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        users.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
         forReading.setEditable(false);
-        add(forRsp, "w 80%, h 80%,split");
-        add(users, " w 40%,wrap,h 80%");
+        add(forRsp, "w 100%, h 80%,wrap");
         add(forWsp, "w 100% ,h 20%,wrap");
         add(close, "w 100%,split");
         add(send, "w 100%");
@@ -63,7 +72,23 @@ public class Tabbed extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            tabbedPane.remove(panel);
+            int n = JOptionPane.showConfirmDialog(
+                null,
+                "If you close the window, you lost hole communication!",
+                "Warning",
+                JOptionPane.YES_NO_OPTION);
+            if (n == JOptionPane.YES_OPTION) {
+                MainWindow frame = (MainWindow)SwingUtilities.getAncestorOfClass(MainWindow.class, tabbedPane);
+                if(frame != null){
+                    List<String> tempList = frame.getListOfOpenWindows();
+                    if(tempList.contains(addressee)){
+                        tempList.remove(addressee);
+                        tabbedPane.remove(panel);
+                    }
+                }
+                
+            }
+
         }
     }
 
