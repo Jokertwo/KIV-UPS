@@ -1,26 +1,24 @@
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-
+import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import net.miginfocom.swing.MigLayout;
 
 
-public class MainWindow extends JFrame {
+public class ChatWindow extends JFrame {
 
     private JTabbedPane tabbedPane = new JTabbedPane();
-
     private JTree users;
-
-    private List<String> listOfOpenWidows = new ArrayList<>();
+    private Map<String,Tabbed> listOfOpenWidows = new HashMap<>();
 
     /**
      * 
@@ -28,7 +26,7 @@ public class MainWindow extends JFrame {
     private static final long serialVersionUID = -3880026026104218593L;
 
 
-    public MainWindow() {
+    public ChatWindow() {
         initTree();
         addUser("All");
         setLayout(new MigLayout());
@@ -38,19 +36,21 @@ public class MainWindow extends JFrame {
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        addUser("Petr");
     }
     
-    public List<String> getListOfOpenWindows(){
+    public Map<String,Tabbed> getListOfOpenWindows(){
         return listOfOpenWidows;
     }
 
 
     public void addTab(String name) {
-        tabbedPane.add(name, new Tabbed(tabbedPane,name));
+        Tabbed tab = new Tabbed(tabbedPane,name);
+        tabbedPane.add(name, tab);
         int count = tabbedPane.getTabCount();
         count = (count > 0) ? count - 1 : count;
         tabbedPane.setSelectedIndex(count);
-        listOfOpenWidows.add(name);
+        listOfOpenWidows.put(name,tab);
     }
 
 
@@ -79,7 +79,7 @@ public class MainWindow extends JFrame {
                         return;
                     String name = node.getUserObject().toString();
 
-                    if (!listOfOpenWidows.contains(name)) {
+                    if (!listOfOpenWidows.containsKey(name)) {
                         addTab(name);
                     }
                 }
@@ -89,11 +89,25 @@ public class MainWindow extends JFrame {
 
 
     public static void main(String[] args) {
+     
+        try {
+            // Set System L&F
+            UIManager.setLookAndFeel(
+                "com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+        } catch (UnsupportedLookAndFeelException e) {
+            // handle exception
+        } catch (ClassNotFoundException e) {
+            // handle exception
+        } catch (InstantiationException e) {
+            // handle exception
+        } catch (IllegalAccessException e) {
+            // handle exception
+        }
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-                new MainWindow();
+                new ChatWindow();
             }
         });
 

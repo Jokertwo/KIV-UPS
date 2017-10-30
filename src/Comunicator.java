@@ -5,19 +5,19 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Scanner;
 import java.util.logging.Logger;
 
 
 public class Comunicator {
     private static final Logger LOG = Logger.getLogger(Comunicator.class.getName());
     private Socket socket = null;
-    private Scanner console = null;
+
     private BufferedWriter streamOut = null;
     private BufferedReader streamIn = null;
 
 
     public Comunicator(String serverName, int serverPort) {
+
         LOG.info("Establishing connection. Please wait ...");
         try {
             socket = new Socket(serverName, serverPort);
@@ -32,14 +32,21 @@ public class Comunicator {
     }
 
 
-    public void writeToServer(String line) {
+    public String sendToServer(String line) {
         try {
-            streamOut.write(line + "\n");
+            if(line.length() < 1024){
+                LOG.info("Sending to server : " + line);
+            streamOut.write(line);
             streamOut.flush();
+            return streamIn.readLine();
+            }
+            else{
+                LOG.info("Too long message : " + line);
+            }
         } catch (IOException ioe) {
             LOG.warning("Sending error: " + ioe.getMessage());
         }
-
+        return null;
     }
 
 
@@ -69,9 +76,7 @@ public class Comunicator {
 
     }
 
-
     public void start() throws IOException {
-        console = new Scanner(System.in);
         streamOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         streamIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
@@ -79,8 +84,6 @@ public class Comunicator {
 
     public void stop() {
         try {
-            if (console != null)
-                console.close();
             if (streamOut != null)
                 streamOut.close();
             if (socket != null)

@@ -3,7 +3,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.List;
+import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -31,16 +31,23 @@ public class Tabbed extends JPanel {
     private static final long serialVersionUID = 1L;
 
 
-    public Tabbed(JTabbedPane tabbedPane, String addressee) {
+    public Tabbed(JTabbedPane tabbedPane, String addressee) {        
         this.tabbedPane = tabbedPane;
         this.addressee = addressee;
         createChatPanel();
-        close.addActionListener(new CloseTab(this));
+        close.addActionListener(new CloseTab());
         send.addActionListener(new SendMessageButton());
         forWriting.addKeyListener(new SendMessageKey());
         forReading.setLineWrap(true);
         forWriting.setLineWrap(true);
         setFont();
+    }
+    
+    public String getAddressee(){
+        return this.addressee;
+    }
+    public JTextArea getForReading(){
+        return this.forReading;
     }
 
 
@@ -62,14 +69,6 @@ public class Tabbed extends JPanel {
     }
 
     private class CloseTab implements ActionListener {
-        JPanel panel;
-
-
-        public CloseTab(JPanel panel) {
-            this.panel = panel;
-        }
-
-
         @Override
         public void actionPerformed(ActionEvent e) {
             int n = JOptionPane.showConfirmDialog(
@@ -78,12 +77,13 @@ public class Tabbed extends JPanel {
                 "Warning",
                 JOptionPane.YES_NO_OPTION);
             if (n == JOptionPane.YES_OPTION) {
-                MainWindow frame = (MainWindow)SwingUtilities.getAncestorOfClass(MainWindow.class, tabbedPane);
+                ChatWindow frame = (ChatWindow)SwingUtilities.getAncestorOfClass(ChatWindow.class, tabbedPane);
                 if(frame != null){
-                    List<String> tempList = frame.getListOfOpenWindows();
-                    if(tempList.contains(addressee)){
-                        tempList.remove(addressee);
-                        tabbedPane.remove(panel);
+                    Map<String,Tabbed> tempMap = frame.getListOfOpenWindows();
+                    if(tempMap.containsKey(addressee)){
+                        tabbedPane.remove(tempMap.get(addressee));
+                        tempMap.remove(addressee);
+                        
                     }
                 }
                 
