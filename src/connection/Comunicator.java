@@ -1,3 +1,4 @@
+package connection;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,22 +15,21 @@ public class Comunicator {
 
     private BufferedWriter streamOut = null;
     private BufferedReader streamIn = null;
+    private final Parser parser;
 
 
-    public Comunicator(String serverName, int serverPort) {
+    public Comunicator(String serverName, int serverPort,Parser parser) throws UnknownHostException, IOException {
 
         LOG.info("Establishing connection. Please wait ...");
-        try {
+        
             socket = new Socket(serverName, serverPort);
+            this.parser = parser;
             LOG.info("Connected: " + socket);
             start();
             listenToServer();
-        } catch (UnknownHostException uhe) {
-            LOG.warning("Host unknown: " + uhe.getMessage());
-        } catch (IOException ioe) {
-            LOG.warning("Unexpected exception: " + ioe.getMessage());
-        }
+        
     }
+   
 
 
     public String sendToServer(String line) {
@@ -58,7 +58,7 @@ public class Comunicator {
                 while (true) {
                     try {
                         if (streamIn.ready()) {
-                            System.out.println(streamIn.readLine());
+                            parser.parseMessage(streamIn.readLine());
                         }
                         Thread.sleep(10);
                     } catch (IOException e) {

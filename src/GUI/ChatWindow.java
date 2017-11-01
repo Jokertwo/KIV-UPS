@@ -1,4 +1,4 @@
-package GUI;
+package gui;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,6 +10,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import connection.Parser;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -26,19 +27,20 @@ public class ChatWindow extends JFrame {
      * 
      */
     private static final long serialVersionUID = -3880026026104218593L;
+    private final Parser parser;
 
-
-    public ChatWindow() {
+    public ChatWindow(Parser parser) {
+        this.parser = parser;
         setTitle("Chat");
         initTree();
-        addUser("All");
+        parser.setListOfOpenWidows(listOfOpenWidows);
+        parser.setUsers(users);
         setLayout(new MigLayout());
         setSize(600, 500);
         add(tabbedPane, "w 80% , h 100%");
         add(users, " w 20%, h 100%");       
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        addUser("Petr");
     }
     
     public Map<String,Tabbed> getListOfOpenWindows(){
@@ -46,24 +48,15 @@ public class ChatWindow extends JFrame {
     }
 
 
-    public void addTab(String name) {
-        Tabbed tab = new Tabbed(tabbedPane,name);
-        tabbedPane.add(name, tab);
+    public void addTab(String addressee) {
+        Tabbed tab = new Tabbed(tabbedPane,addressee,parser);
+        tabbedPane.add(addressee, tab);
         int count = tabbedPane.getTabCount();
         count = (count > 0) ? count - 1 : count;
         tabbedPane.setSelectedIndex(count);
-        listOfOpenWidows.put(name,tab);
-        log.info("Open new tab for user : " + name);
+        listOfOpenWidows.put(addressee,tab);
+        log.info("Open new tab for user : " + addressee);
     }
-
-
-    public void addUser(String name) {
-        DefaultTreeModel model = (DefaultTreeModel) users.getModel();
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-        root.add(new DefaultMutableTreeNode(name));
-        model.reload(root);
-    }
-
 
     private void initTree() {
 

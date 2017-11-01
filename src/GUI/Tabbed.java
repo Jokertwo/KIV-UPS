@@ -1,4 +1,4 @@
-package GUI;
+package gui;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,6 +13,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import connection.Parser;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -29,16 +30,22 @@ public class Tabbed extends JPanel {
     private JScrollPane forRsp = new JScrollPane(forReading);
     private JScrollPane forWsp = new JScrollPane(forWriting);
     private String addressee;
+    
+    private final Parser parser;
+    
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
+    
+    private boolean isPublicMessage;
 
 
-    public Tabbed(JTabbedPane tabbedPane, String addressee) { 
+    public Tabbed(JTabbedPane tabbedPane, String addressee,Parser parser) { 
         log.info("Inicialization of new tab for " + addressee);
         this.tabbedPane = tabbedPane;
         this.addressee = addressee;
+        this.parser = parser;
         createChatPanel();
         close.addActionListener(new CloseTab());
         send.addActionListener(new SendMessageButton());
