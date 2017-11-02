@@ -22,7 +22,7 @@ public class Main {
         temp.put("conUsers", "6");
         temp.put("ok", "7");
         temp.put("error", "8");
-        temp.put("separ", ";");
+        temp.put("sep", ";");
         
         return Collections.unmodifiableMap(temp);
     }

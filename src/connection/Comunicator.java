@@ -36,7 +36,7 @@ public class Comunicator {
         try {
             if(line.length() < 1024){
                 LOG.info("Sending to server : " + line);
-            streamOut.write(line);
+            streamOut.write(line + "\n");
             streamOut.flush();
             return streamIn.readLine();
             }

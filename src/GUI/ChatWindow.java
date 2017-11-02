@@ -9,7 +9,6 @@ import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 import connection.Parser;
 import net.miginfocom.swing.MigLayout;
 
@@ -18,7 +17,7 @@ public class ChatWindow extends JFrame {
 
     private JTabbedPane tabbedPane = new JTabbedPane();
     private JTree users;
-    private Map<String,Tabbed> listOfOpenWidows = new HashMap<>();
+    public static Map<String,Tabbed> listOfOpenWidows = new HashMap<>();
 
     
     private static final Logger log = Logger.getLogger(ChatWindow.class.getName());
@@ -33,14 +32,15 @@ public class ChatWindow extends JFrame {
         this.parser = parser;
         setTitle("Chat");
         initTree();
-        parser.setListOfOpenWidows(listOfOpenWidows);
         parser.setUsers(users);
+        parser.setChatWindow(this);
         setLayout(new MigLayout());
         setSize(600, 500);
         add(tabbedPane, "w 80% , h 100%");
         add(users, " w 20%, h 100%");       
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+//        addTab("All");
     }
     
     public Map<String,Tabbed> getListOfOpenWindows(){
@@ -62,7 +62,7 @@ public class ChatWindow extends JFrame {
 
         // create the root node
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("");
-
+        root.add(new DefaultMutableTreeNode("All"));
         users = new JTree(root);
         users.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 19));
         users.setRootVisible(false);

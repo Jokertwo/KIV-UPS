@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import connection.Parser;
 import net.miginfocom.swing.MigLayout;
 
@@ -82,9 +83,16 @@ public class ConnectWindow extends JFrame {
                 try{
                     
                 Parser parser = new Parser(textIP.getText(), Integer.parseInt(textPort.getText()));
-                LogInWindow login = new LogInWindow(parser);                
-                setVisible(false);
-                login.setVisible(true);
+                SwingUtilities.invokeLater(new Runnable() {
+                    
+                    @Override
+                    public void run() {
+                        LogInWindow login = new LogInWindow(parser);                
+                        setVisible(false);
+                        login.setVisible(true);                       
+                    }
+                });
+                
                 } catch (UnknownHostException uhe) {                   
                     LOG.warning("Host unknown: " + uhe.getMessage());
                     unableToConnet();

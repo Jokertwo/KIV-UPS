@@ -1,4 +1,5 @@
 package gui;
+
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,11 +15,12 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import connection.Parser;
+import main.Main;
 import net.miginfocom.swing.MigLayout;
 
 
 public class Tabbed extends JPanel {
-    
+
     private static final Logger log = Logger.getLogger(Tabbed.class.getName());
 
     private JTextArea forReading = new JTextArea();
@@ -30,18 +32,16 @@ public class Tabbed extends JPanel {
     private JScrollPane forRsp = new JScrollPane(forReading);
     private JScrollPane forWsp = new JScrollPane(forWriting);
     private String addressee;
-    
+
     private final Parser parser;
-    
+
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    
-    private boolean isPublicMessage;
 
 
-    public Tabbed(JTabbedPane tabbedPane, String addressee,Parser parser) { 
+    public Tabbed(JTabbedPane tabbedPane, String addressee, Parser parser) {
         log.info("Inicialization of new tab for " + addressee);
         this.tabbedPane = tabbedPane;
         this.addressee = addressee;
@@ -54,11 +54,14 @@ public class Tabbed extends JPanel {
         forWriting.setLineWrap(true);
         setFont();
     }
-    
-    public String getAddressee(){
+
+
+    public String getAddressee() {
         return this.addressee;
     }
-    public JTextArea getForReading(){
+
+
+    public JTextArea getForReading() {
         return this.forReading;
     }
 
@@ -89,19 +92,18 @@ public class Tabbed extends JPanel {
                 "Warning",
                 JOptionPane.YES_NO_OPTION);
             if (n == JOptionPane.YES_OPTION) {
-                ChatWindow frame = (ChatWindow)SwingUtilities.getAncestorOfClass(ChatWindow.class, tabbedPane);
-                if(frame != null){
-                    Map<String,Tabbed> tempMap = frame.getListOfOpenWindows();
-                    if(tempMap.containsKey(addressee)){
+                ChatWindow frame = (ChatWindow) SwingUtilities.getAncestorOfClass(ChatWindow.class, tabbedPane);
+                if (frame != null) {
+                    Map<String, Tabbed> tempMap = frame.getListOfOpenWindows();
+                    if (tempMap.containsKey(addressee)) {
                         tabbedPane.remove(tempMap.get(addressee));
                         tempMap.remove(addressee);
                         log.info("Removing tab :" + addressee);
                     }
-                }
-                else{
+                } else {
                     log.warning("Can't find ChatWindow frame");
                 }
-                
+
             }
 
         }
@@ -137,9 +139,16 @@ public class Tabbed extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            forReading.append(forWriting.getText() + "\n");
-            forWriting.setText("");
-            forWriting.grabFocus();
+            String response = parser.sendPublicMessage(forWriting.getText());
+            if (response.equals(Main.codes.get("ok"))) {
+                forReading.append(forWriting.getText() + "\n");
+                forWriting.setText("");
+                forWriting.grabFocus();
+                log.info("Message '"+forWriting.getText()+"' was sended to public chat");
+            }
+            else{
+                log.warning("Error during send message to public chat. Server response " + response);
+            }
 
         }
 
