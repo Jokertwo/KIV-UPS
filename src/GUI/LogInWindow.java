@@ -6,13 +6,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import action.EnterActionKey;
 import connection.Parser;
 import main.Main;
 import net.miginfocom.swing.MigLayout;
@@ -109,33 +109,7 @@ public class LogInWindow extends JFrame {
                 }
             }
         });
-        loginB.addKeyListener(new LogInKey());
-    }
-    
-    private class LogInKey implements KeyListener {
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-        }
-
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                e.consume();
-                loginB.doClick();
-            }
-        }
-
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                e.consume();
-            }
-
-        }
-
+        loginB.addKeyListener(new EnterActionKey(loginB));
     }
 
 }

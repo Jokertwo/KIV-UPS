@@ -13,6 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import action.EnterActionKey;
 import connection.Parser;
 import net.miginfocom.swing.MigLayout;
 
@@ -102,6 +103,7 @@ public class ConnectWindow extends JFrame {
                 }
             }
         });
+        connectB.addKeyListener(new EnterActionKey(connectB));
         return connectB;
     }
 
