@@ -23,6 +23,7 @@ public class Main {
         temp.put("ok", "7");
         temp.put("error", "8");
         temp.put("sep", ";");
+        temp.put("chatAll", "All");
         
         return Collections.unmodifiableMap(temp);
     }

@@ -19,6 +19,7 @@ public class Parser {
     private String name;
     private JTree users;
     private ChatWindow window;
+    private static final String ALL = Main.codes.get("chatAll");
 
 
     public Parser(String serverName, int serverPort) throws UnknownHostException, IOException {
@@ -33,6 +34,9 @@ public class Parser {
 
     public void setName(String name) {
         this.name = name;
+    }
+    public String getName(){
+        return name;
     }
 
 
@@ -51,8 +55,8 @@ public class Parser {
     }
 
 
-    public String logOut(String name) {
-        return com.sendToServer(Main.codes.get("logOut") + name);
+    public String logOut() {
+        return com.sendToServer(Main.codes.get("logOut") + this.name);
     }
 
 
@@ -75,7 +79,7 @@ public class Parser {
         if (getTabMap().containsKey(splitMessage[0])) {
             getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
         } else {
-            window.addTab(splitMessage[0]);
+            window.addTab(splitMessage[0],splitMessage[0].equals(ALL));
             getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
         }
     }
@@ -85,11 +89,11 @@ public class Parser {
         int index = message.indexOf(Main.codes.get("sep"));
         String fromName = message.substring(1, index);
         message = message.substring(index + 1, message.length());
-        if (getTabMap().containsKey("All")) {
-            getTabMap().get("All").getForReading().append(fromName + " : " + message + "\n");
+        if (getTabMap().containsKey(ALL)) {
+            getTabMap().get(ALL).getForReading().append(fromName + " : " + message + "\n");
         } else {
-            window.addTab("All");
-            getTabMap().get("All").getForReading().append(fromName + " : " + message + "\n");
+            window.addTab(ALL,true);
+            getTabMap().get(ALL).getForReading().append(fromName + " : " + message + "\n");
         }
     }
 
@@ -108,19 +112,17 @@ public class Parser {
             case 2:
                 recievePrivateMessage(message);
                 break;
-            case 3:
-                break;
-            case 4:
-                break;
-            case 5:
-                break;
             case 6:
                 splitUserList(message);
                 break;
             case 7:
+                LOG.warning("Unexpected and unidentifiable ok");
                 break;
             case 8:
+                LOG.warning("Unexpected and unidentifiable error");
                 break;
+             default:
+                 LOG.warning("Unexpected message : " + message );
         }
 
     }
@@ -130,7 +132,7 @@ public class Parser {
         String sub = message.substring(1, message.length());
         String[] users = sub.split(Main.codes.get("sep"));
         cleanTree();
-        addUser("All");
+        addUser(ALL);
         for (String temp : users) {
             addUser(temp);
         }

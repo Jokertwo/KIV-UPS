@@ -34,6 +34,8 @@ public class Tabbed extends JPanel {
     private String addressee;
 
     private final Parser parser;
+    
+    private final boolean isPublicChat;
 
     /**
      * 
@@ -41,11 +43,12 @@ public class Tabbed extends JPanel {
     private static final long serialVersionUID = 1L;
 
 
-    public Tabbed(JTabbedPane tabbedPane, String addressee, Parser parser) {
+    public Tabbed(JTabbedPane tabbedPane, String addressee, Parser parser,boolean isPublicChat) {
         log.info("Inicialization of new tab for " + addressee);
         this.tabbedPane = tabbedPane;
         this.addressee = addressee;
         this.parser = parser;
+        this.isPublicChat = isPublicChat;
         createChatPanel();
         close.addActionListener(new CloseTab());
         send.addActionListener(new SendMessageButton());
@@ -139,17 +142,24 @@ public class Tabbed extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String response = parser.sendPublicMessage(forWriting.getText());
+            String response = send();
             if (response.equals(Main.codes.get("ok"))) {
-                forReading.append(forWriting.getText() + "\n");
+                forReading.append("You : " + forWriting.getText() + "\n");
+                log.info("Message '"+forWriting.getText()+"' was sended to public chat");
                 forWriting.setText("");
                 forWriting.grabFocus();
-                log.info("Message '"+forWriting.getText()+"' was sended to public chat");
             }
             else{
                 log.warning("Error during send message to public chat. Server response " + response);
             }
 
+        }
+        
+        private String send(){
+            if(isPublicChat){
+                return parser.sendPublicMessage(forWriting.getText());
+            }
+            return parser.sendPrivateMessage(addressee, forWriting.getText());
         }
 
     }
