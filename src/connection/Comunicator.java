@@ -35,9 +35,9 @@ public class Comunicator {
     public String sendToServer(String line) {
         try {
             if(line.length() < 1024){
-                LOG.info("Sending to server : " + line);
             streamOut.write(line + "\n");
             streamOut.flush();
+            LOG.info("Send to server : '" + line+"'");
             return streamIn.readLine();
             }
             else{
@@ -58,7 +58,9 @@ public class Comunicator {
                 while (true) {
                     try {
                         if (streamIn.ready()) {
-                            parser.parseMessage(streamIn.readLine());
+                            String temp = streamIn.readLine();
+                            parser.parseMessage(temp);
+                            LOG.info("Recieve from serever : '" + temp + "'");
                         }
                         Thread.sleep(10);
                     } catch (IOException e) {
