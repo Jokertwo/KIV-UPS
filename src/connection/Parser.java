@@ -35,7 +35,9 @@ public class Parser {
     public void setName(String name) {
         this.name = name;
     }
-    public String getName(){
+
+
+    public String getName() {
         return name;
     }
 
@@ -79,7 +81,7 @@ public class Parser {
         if (getTabMap().containsKey(splitMessage[0])) {
             getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
         } else {
-            window.addTab(splitMessage[0],splitMessage[0].equals(ALL));
+            window.addTab(splitMessage[0], splitMessage[0].equals(ALL));
             getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
         }
     }
@@ -92,7 +94,7 @@ public class Parser {
         if (getTabMap().containsKey(ALL)) {
             getTabMap().get(ALL).getForReading().append(fromName + " : " + message + "\n");
         } else {
-            window.addTab(ALL,true);
+            window.addTab(ALL, true);
             getTabMap().get(ALL).getForReading().append(fromName + " : " + message + "\n");
         }
     }
@@ -107,12 +109,15 @@ public class Parser {
         }
         switch (i) {
             case 1:
+                LOG.info("Recieve public message from server.");
                 recievePublicMessage(message);
                 break;
             case 2:
+                LOG.info("Recieve private message from server.");
                 recievePrivateMessage(message);
                 break;
             case 6:
+                LOG.info("Recieve user list from server.");
                 splitUserList(message);
                 break;
             case 7:
@@ -121,20 +126,22 @@ public class Parser {
             case 8:
                 LOG.warning("Unexpected and unidentifiable error");
                 break;
-             default:
-                 LOG.warning("Unexpected message : " + message );
+            default:
+                LOG.warning("Unexpected message : " + message);
         }
 
     }
 
 
     private void splitUserList(String message) {
-        String sub = message.substring(1, message.length());
-        String[] users = sub.split(Main.codes.get("sep"));
         cleanTree();
         addUser(ALL);
-        for (String temp : users) {
-            addUser(temp);
+        String sub = message.substring(1, message.length());
+        if (sub.length() > 0) {
+            String[] users = sub.split(Main.codes.get("sep"));            
+            for (String temp : users) {
+                addUser(temp);
+            }
         }
     }
 
