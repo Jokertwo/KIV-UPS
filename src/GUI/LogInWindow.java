@@ -12,8 +12,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.text.AbstractDocument;
 import action.EnterActionKey;
 import connection.Parser;
+import documentFilters.SemicolonsFilter;
 import main.Main;
 import net.miginfocom.swing.MigLayout;
 
@@ -83,7 +85,9 @@ public class LogInWindow extends JFrame {
                 }
             }
         });
-
+        loginNameTF.addKeyListener(new EnterActionKey(loginB));
+        AbstractDocument doc = (AbstractDocument)loginNameTF.getDocument();
+        doc.setDocumentFilter(new SemicolonsFilter());
     }
 
 
@@ -109,7 +113,6 @@ public class LogInWindow extends JFrame {
                 }
             }
         });
-        loginB.addKeyListener(new EnterActionKey(loginB));
     }
 
 }
