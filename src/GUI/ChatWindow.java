@@ -23,12 +23,8 @@ public class ChatWindow extends JFrame {
     private JTree users;
     public static Map<String, Tabbed> listOfOpenWidows = new HashMap<>();
 
-
     private static final Logger log = Logger.getLogger(ChatWindow.class.getName());
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -3880026026104218593L;
     private final Parser parser;
 
@@ -48,6 +44,7 @@ public class ChatWindow extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent windowEvent) {
+                log.info("Logout from server");
                 parser.logOut();
                     System.exit(1);
             }
