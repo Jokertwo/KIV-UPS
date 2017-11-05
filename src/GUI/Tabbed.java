@@ -119,7 +119,6 @@ public class Tabbed extends JPanel {
             String response = send();
             if (response.equals(Main.codes.get("ok"))) {
                 forReading.append("You : " + forWriting.getText() + "\n");
-                log.info("Message '"+forWriting.getText()+"' was sended to public chat");
                 forWriting.setText("");
                 forWriting.grabFocus();
             }
