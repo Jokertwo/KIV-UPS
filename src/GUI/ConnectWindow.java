@@ -13,8 +13,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.text.AbstractDocument;
 import action.EnterActionKey;
 import connection.Parser;
+import documentFilters.IntegerFilter;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -26,7 +28,7 @@ public class ConnectWindow extends JFrame {
     private static final long serialVersionUID = -6197662685806093187L;
 
     private final static Logger LOG = Logger.getLogger(ConnectWindow.class.getName());
-
+    
     private JLabel labelIP = new JLabel("IP adress :");
     private JTextField textIP = new JTextField();
 
@@ -48,9 +50,15 @@ public class ConnectWindow extends JFrame {
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
         initFont();
+        addDocumentFilter(textIP);
+        addDocumentFilter(textPort);
+        
         dummy();
+    }
+    private void addDocumentFilter(JTextField text){
+       AbstractDocument document = (AbstractDocument) text.getDocument();
+       document.setDocumentFilter(new IntegerFilter());
     }
 
 
@@ -63,7 +71,9 @@ public class ConnectWindow extends JFrame {
         panel.add(textPort, "w 100%,wrap");
         panel.add(infoLabel, "center,wrap,gapy 10 10");
         panel.add(initConnectB(), "w 50, h 30,center,gapy 10 10");
-
+        
+        textIP.addKeyListener(new EnterActionKey(connectB));
+        textPort.addKeyListener(new EnterActionKey(connectB));
         return panel;
     }
 
@@ -103,7 +113,6 @@ public class ConnectWindow extends JFrame {
                 }
             }
         });
-        connectB.addKeyListener(new EnterActionKey(connectB));
         return connectB;
     }
 
