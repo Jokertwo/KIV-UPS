@@ -136,15 +136,8 @@ public class Tabbed extends JPanel {
 
         private String send() {
             if (isPublicChat) {
-                for (int i = 0; i < 10; i++) {
-                    parser.sendPublicMessage(forWriting.getText());
-                }
                 return parser.sendPublicMessage(forWriting.getText());
-
             } else {
-                for (int i = 0; i < 10; i++) {
-                    parser.sendPrivateMessage(addressee, forWriting.getText());
-                }
                 return parser.sendPrivateMessage(addressee, forWriting.getText());
             }
         }
