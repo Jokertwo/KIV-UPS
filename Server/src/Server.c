@@ -3,7 +3,7 @@
  Compile
  gcc server.c -lpthread -o server
  */
-
+#include<signal.h>
 #include<stdio.h>
 #include<string.h>    //strlen
 #include<stdlib.h>    //strlen
@@ -11,41 +11,10 @@
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>    //write
 #include<pthread.h> //for threading , link with lpthread
-#define BUFFER_SIZE 1024
-#define MAX_USER 20
-
-#define OK_S "7\n"
-#define ERROR_S "8\n"
-#define PING_S "6\n"
-
-#define SEPARATOR ';'
-
-#define LOGOUT 5
-
-#define TRUE 1
-#define FALSE -1
-
-#define on_error(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); }
-#define error_log(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); }
-
-//the thread function
-void *connection_handler(void *);
-int add_new_client(int sock, char *name, int size);
-int remove_client(int sock, char *name);
-int send_to_all(int size, char *buffer, int socket);
-int send_private_message(char *message, int size);
-int send_ok(int sock);
-int send_error(int sock);
-int get_client_index(char *name);
-int check_if_exist(char *name, int size);
-void print_all(void);
-int parseMessage(int sock, char *message, int size);
-int send_user_list(int socket);
-int send_ping(int socket);
-void informAboutConnectClient();
+#include"Server.h"
 
 int number_of_client = 0;
-
+char buf[BUFFER_SIZE];
 typedef struct {
 	int socket;
 	char login[10];
@@ -55,6 +24,7 @@ Client clients[MAX_USER];
 pthread_mutex_t mutex;
 
 int main(int argc, char *argv[]) {
+	(void) signal(SIGINT, shotdownServer);
 	int socket_desc, client_sock, c;
 	struct sockaddr_in server, client;
 	pthread_t thread_id;
@@ -115,18 +85,24 @@ void *connection_handler(void *socket_desc) {
 
 	//Get the socket descriptor
 	int sock = *(int*) socket_desc;
-	int size = 0;
-	char buf[BUFFER_SIZE];
-	char name[10];
+	int size;
 
-	memset(buf, 0, BUFFER_SIZE);
-	memset(name, 0, 10);
+	char sendedSize[4];
 
 	//Receive a message from client
 	while (1) {
 
 		memset(buf, 0, BUFFER_SIZE);
+		memset(sendedSize, 0, 4);
 		size = recv(sock, buf, BUFFER_SIZE, 0);
+
+		strncpy(sendedSize, buf, 4);
+		while (getSize(sendedSize) > size) {
+			size = recv(sock, buf + size, BUFFER_SIZE, 0);
+		}
+		if (getSize(sendedSize) < size) {
+			break;
+		}
 
 		if (size < 0) {
 			on_error("Client read failed\n");
@@ -135,8 +111,9 @@ void *connection_handler(void *socket_desc) {
 			printf("Client disconnect\n");
 			break;
 		} else {
-			if (parseMessage(sock, buf, size) == LOGOUT) {
+			if (parseMessage(sock, buf + 4, size - 4) == LOGOUT) {
 				printf("Client disconnect\n");
+				printf("Left clients : %d", number_of_client);
 				break;
 			}
 		}
@@ -145,7 +122,24 @@ void *connection_handler(void *socket_desc) {
 	return 0;
 
 }
+void shotdownServer(int sig) {
+	printf("Server will be shotDown. \n");
+	parseMessage(0,"9",0);
+	(void) signal(SIGINT, SIG_DFL);
+	exit(0);
+
+}
+
+int getSize(char* number) {
+	int i;
+	if ((i = atoi(number)) != 0) {
+		return i;
+	}
+	return -1;
+}
+
 int parseMessage(int sock, char *message, int size) {
+	printf("Server received : %s", message);
 	pthread_mutex_lock(&mutex);
 	int i;
 	if ((i = atoi(&message[0])) != 0) {
@@ -173,7 +167,7 @@ int parseMessage(int sock, char *message, int size) {
 			return TRUE;
 		case 3:
 			if (send_ping(sock) == FALSE) {
-				error_log("Can't send ping to %s", message +1);
+				error_log("Can't send ping to : %s", message +1);
 				pthread_mutex_unlock(&mutex);
 				return FALSE;
 			}
@@ -189,6 +183,7 @@ int parseMessage(int sock, char *message, int size) {
 			send_ok(sock);
 			informAboutConnectClient();
 			pthread_mutex_unlock(&mutex);
+			printf("Login new user : %s \n", message + 1);
 			return TRUE;
 		case 5:
 			if (remove_client(sock, message + 1) == FALSE) {
@@ -200,6 +195,7 @@ int parseMessage(int sock, char *message, int size) {
 			send_ok(sock);
 			informAboutConnectClient();
 			pthread_mutex_unlock(&mutex);
+			printf("Logout user : %s \n", message + 1);
 			return LOGOUT;
 		case 6:
 			if (send_user_list(sock) == FALSE) {
@@ -209,8 +205,12 @@ int parseMessage(int sock, char *message, int size) {
 			}
 			pthread_mutex_unlock(&mutex);
 			return TRUE;
+		case 9:
+			logOutAll();
+			break;
 		default:
-			error_log("Can't parse message: %s",message);
+			error_log("Can't parse message: %s",message)
+			;
 			pthread_mutex_unlock(&mutex);
 			return FALSE;
 		}
@@ -219,10 +219,12 @@ int parseMessage(int sock, char *message, int size) {
 		pthread_mutex_unlock(&mutex);
 		return FALSE;
 	}
+	return 0;
 }
 
 int add_new_client(int sock, char *name, int size) {
-	if ((check_if_exist(name, size) == FALSE) && (MAX_USER > number_of_client)) {
+	if ((check_if_exist(name + 1) == FALSE) && (MAX_USER > number_of_client)) {
+		memset(clients[number_of_client].login, 0, 10);
 		strncpy(clients[number_of_client].login, name + 1, size - 2);
 		clients[number_of_client].socket = sock;
 		number_of_client++;
@@ -273,10 +275,10 @@ int send_error(int sock) {
 	}
 	return TRUE;
 }
-int check_if_exist(char *name, int size) {
-	name[size - 1] = '\0';
+int check_if_exist(char *name) {
+	name[strlen(name) - 1] = '\0';
 	for (int i = 0; i < number_of_client; i++) {
-		if (strcmp(clients[i].login, name + 1) == 0) {
+		if (strcmp(clients[i].login, name) == 0) {
 			return TRUE;
 		}
 	}
@@ -340,7 +342,6 @@ int send_private_message(char *message, int size) {
 	int index;
 	char *to_user;
 	char *position;
-	printf("Hole message : %s\n", message);
 	if ((position = strchr(message, SEPARATOR)) != NULL) {
 		size_of_name = strlen(message) - strlen(position);
 		to_user = calloc(size_of_name, sizeof(char));
@@ -357,6 +358,12 @@ int send_private_message(char *message, int size) {
 		return FALSE;
 	}
 
+	return FALSE;
+}
+int logOutAll() {
+	if (send_to_all(1, "9", -1) == TRUE) {
+		return TRUE;
+	}
 	return FALSE;
 }
 
