@@ -7,9 +7,10 @@ import java.util.logging.Logger;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import action.ShutdownServer;
+import constants.Constants;
 import gui.ChatWindow;
 import gui.Tabbed;
-import main.Main;
 
 
 public class Parser {
@@ -19,7 +20,6 @@ public class Parser {
     private String name;
     private JTree users;
     private ChatWindow window;
-    private static final String ALL = Main.codes.get("chatAll");
 
 
     public Parser(String serverName, int serverPort) throws UnknownHostException, IOException {
@@ -53,49 +53,49 @@ public class Parser {
 
 
     public String logIn(String name) {
-        return com.sendToServer(Main.codes.get("logIn") + name);
+        return com.sendToServer(appendSize(Constants.LOG_IN + name));
     }
 
 
     public String logOut() {
-        return com.sendToServer(Main.codes.get("logOut") + this.name);
+        return com.sendToServer(appendSize(Constants.LOG_OUT + this.name));
     }
 
 
     public String sendPrivateMessage(String toUser, String message) {
-        return com.sendToServer(
-            Main.codes.get("private") + toUser + Main.codes.get("sep") + this.name + Main.codes.get("sep") + message);
+        return com.sendToServer(appendSize(
+            Constants.PRIVATE + toUser + Constants.SEPARATOR + this.name + Constants.SEPARATOR + message));
     }
 
 
     public String sendPublicMessage(String message) {
-        return com.sendToServer(Main.codes.get("all") + this.name + Main.codes.get("sep") + message);
+        return com.sendToServer(appendSize(Constants.ALL + this.name + Constants.SEPARATOR + message));
     }
 
 
     public void recievePrivateMessage(String message) {
-        int index = message.indexOf(Main.codes.get("sep"));
+        int index = message.indexOf(Constants.SEPARATOR);
         message = message.substring(index + 1, message.length());
-        index = message.indexOf(Main.codes.get("sep"));
+        index = message.indexOf(Constants.SEPARATOR);
         String[] splitMessage = { message.substring(0, index), message.substring(index + 1, message.length()) };
         if (getTabMap().containsKey(splitMessage[0])) {
             getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
         } else {
-            window.addTab(splitMessage[0], splitMessage[0].equals(ALL));
+            window.addTab(splitMessage[0], splitMessage[0].equals(Constants.CHAT_ALL));
             getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
         }
     }
 
 
     private void recievePublicMessage(String message) {
-        int index = message.indexOf(Main.codes.get("sep"));
+        int index = message.indexOf(Constants.SEPARATOR);
         String fromName = message.substring(1, index);
         message = message.substring(index + 1, message.length());
-        if (getTabMap().containsKey(ALL)) {
-            getTabMap().get(ALL).getForReading().append(fromName + " : " + message + "\n");
+        if (getTabMap().containsKey(Constants.CHAT_ALL)) {
+            getTabMap().get(Constants.CHAT_ALL).getForReading().append(fromName + " : " + message + "\n");
         } else {
-            window.addTab(ALL, true);
-            getTabMap().get(ALL).getForReading().append(fromName + " : " + message + "\n");
+            window.addTab(Constants.CHAT_ALL, true);
+            getTabMap().get(Constants.CHAT_ALL).getForReading().append(fromName + " : " + message + "\n");
         }
     }
 
@@ -121,24 +121,43 @@ public class Parser {
                 splitUserList(message);
                 break;
             case 7:
-                LOG.warning("Unexpected and unidentifiable ok");
+                LOG.info("Recieve ok");
                 break;
             case 8:
-                LOG.warning("Unexpected and unidentifiable error");
+                LOG.info("Recieve error");
+                break;
+            case 9:
+                LOG.info("Server will be shotDown so try logOut");
+                new ShutdownServer(com);
                 break;
             default:
                 LOG.warning("Unexpected message : " + message);
+                break;
         }
 
     }
 
 
+    private String appendSize(String line) {
+        StringBuilder sb = new StringBuilder();
+        String a = String.valueOf(line.length() + 1 + 4);
+
+        if (a.length() < 5) {
+            for (int i = 0; i < 4 - a.length(); i++) {
+                sb.append("0");
+            }
+            sb.append(a);
+        }
+        return sb.toString() + line;
+    }
+
+
     private void splitUserList(String message) {
         cleanTree();
-        addUser(ALL);
+        addUser(Constants.CHAT_ALL);
         String sub = message.substring(1, message.length());
         if (sub.length() > 0) {
-            String[] users = sub.split(Main.codes.get("sep"));            
+            String[] users = sub.split(Constants.SEPARATOR);
             for (String temp : users) {
                 addUser(temp);
             }

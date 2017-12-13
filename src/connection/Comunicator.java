@@ -1,4 +1,5 @@
 package connection;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,34 +14,36 @@ public class Comunicator {
     private static final Logger LOG = Logger.getLogger(Comunicator.class.getName());
     private Socket socket = null;
 
-    private BufferedWriter streamOut = null;
-    private BufferedReader streamIn = null;
-    private final Parser parser;
+    private BufferedWriter streamOut;
+    private BufferedReader streamIn;
+    Reciever listen;
 
 
-    public Comunicator(String serverName, int serverPort,Parser parser) throws UnknownHostException, IOException {
+    public Comunicator(String serverName, int serverPort, Parser parser) throws UnknownHostException, IOException {
 
         LOG.info("Establishing connection. Please wait ...");
+        socket = new Socket(serverName, serverPort);   
+        LOG.info("Connected: " + socket);
         
-            socket = new Socket(serverName, serverPort);
-            this.parser = parser;
-            LOG.info("Connected: " + socket);
-            start();
-            listenToServer();
-        
+        start();
+        listen = new Reciever(streamIn,parser);
+        listen.start();
+        LOG.info("Listener(thread) begun listen.");
+
     }
+    
    
-
-
     public String sendToServer(String line) {
         try {
-            if(line.length() < 1024){
-            streamOut.write(line + "\n");
-            streamOut.flush();
-            LOG.info("Send to server : '" + line+"'");
-            return streamIn.readLine();
-            }
-            else{
+            if (line.length() < 1023) {
+                // write to buffer
+                streamOut.write(line + "\n");
+                // send to server
+                streamOut.flush();
+                LOG.info("Send to server : '" + line + "'");
+                // wait for notification
+                return listen.getNotification();
+            } else {
                 LOG.info("Too long message : " + line);
             }
         } catch (IOException ioe) {
@@ -50,34 +53,7 @@ public class Comunicator {
     }
 
 
-    public void listenToServer() {
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        if (streamIn.ready()) {
-                            String temp = streamIn.readLine();
-                            parser.parseMessage(temp);
-                            LOG.info("Recieve from serever : '" + temp + "'");
-                        }
-                        Thread.sleep(10);
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-
-            }
-        });
-        thread.start();
-
-    }
-
+   
     public void start() throws IOException {
         streamOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         streamIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
