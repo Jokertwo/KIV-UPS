@@ -13,7 +13,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import connection.Parser;
-import main.Main;
+import constants.Constants;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -38,7 +38,7 @@ public class ChatWindow extends JFrame {
         setLayout(new MigLayout());
         setSize(600, 500);
         add(tabbedPane, "w 80% , h 100%");
-        add(users, " w 20%, h 100%");       
+        add(users, " w 20%, h 100%");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {
@@ -46,9 +46,9 @@ public class ChatWindow extends JFrame {
             public void windowClosing(WindowEvent windowEvent) {
                 log.info("Logout from server");
                 parser.logOut();
-                    System.exit(1);
+                System.exit(1);
             }
-              
+
         });
     }
 
@@ -87,7 +87,7 @@ public class ChatWindow extends JFrame {
                     String name = node.getUserObject().toString();
 
                     if (!listOfOpenWidows.containsKey(name)) {
-                        addTab(name, name.equals(Main.codes.get("chatAll")));
+                        addTab(name, name.equals(Constants.CHAT_ALL));
                     }
                 }
             }

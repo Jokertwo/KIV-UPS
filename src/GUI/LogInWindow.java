@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -13,10 +12,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.JTextComponent;
 import action.EnterActionKey;
+import action.MaxLengthAction;
 import connection.Parser;
+import constants.Constants;
 import documentFilters.SemicolonsFilter;
-import main.Main;
+import documentListener.CheckEmptyTextField;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -26,7 +28,7 @@ public class LogInWindow extends JFrame {
 
     private final String toLongNick = "Maximum length of nick is 8.";
     private static final long serialVersionUID = 1L;
-    private final int MAXIMUM_LENGTH_OF_NICKNAME = 8;
+    private static final int MAXIMUM_LENGTH_OF_NICKNAME = 8;
     private final String loginS = "LogIn";
 
     private JLabel loginNameL = new JLabel("Login name :");
@@ -73,25 +75,15 @@ public class LogInWindow extends JFrame {
     private void initTextField() {
         loginNameTF.setFont(font);
         loginNameTF.setToolTipText("Write here your nickname.");
-        loginNameTF.addKeyListener(new KeyAdapter() {
-            public void keyTyped(KeyEvent e) {
-                if (loginNameTF.getText().length() >= MAXIMUM_LENGTH_OF_NICKNAME) { // limit textfield characters
-                    e.consume();
-                    infoLabel.setText(toLongNick);
-                    infoLabel.setForeground(Color.RED);
-                    log.info("User try type too long nickname.");
-                } else {
-                    infoLabel.setText(" ");
-                }
-            }
-        });
+        loginNameTF.addKeyListener(new MaxLengthLoginAction(loginNameTF, MAXIMUM_LENGTH_OF_NICKNAME));
         loginNameTF.addKeyListener(new EnterActionKey(loginB));
-        AbstractDocument doc = (AbstractDocument)loginNameTF.getDocument();
-        doc.setDocumentFilter(new SemicolonsFilter());
+        loginNameTF.getDocument().addDocumentListener(new CheckEmptyTextField(loginB));
+        ((AbstractDocument) loginNameTF.getDocument()).setDocumentFilter(new SemicolonsFilter());
     }
 
 
     private void initButton() {
+        loginB.setEnabled(false);
         loginB.setFont(font);
         loginB.addActionListener(new ActionListener() {
 
@@ -99,20 +91,40 @@ public class LogInWindow extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String userName = loginNameTF.getText();
                 String responseFromServer = parser.logIn(userName);
-                if (responseFromServer.equals(Main.codes.get("ok"))) {
+                if (responseFromServer.equals(Constants.OK)) {
                     ChatWindow chat = new ChatWindow(parser);
                     chat.setVisible(true);
                     log.info("Create and showing ChatWindow.");
                     setVisible(false);
                     log.info("Hidding LogIn window");
                     parser.setName(userName);
-                }
-                else if(responseFromServer.equals(Main.codes.get("error"))){
+                } else if (responseFromServer.equals(Constants.ERROR)) {
                     infoLabel.setForeground(Color.RED);
                     infoLabel.setText("The name is already in use...");
                 }
             }
         });
+    }
+
+    private class MaxLengthLoginAction extends MaxLengthAction {
+
+        public MaxLengthLoginAction(JTextComponent component, int maxLength) {
+            super(component, maxLength);
+        }
+
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+            if (component.getText().length() >= maxLength) { // limit textfield characters
+                component.setText(component.getText().substring(0, component.getText().length() - 1));
+                infoLabel.setText(toLongNick);
+                infoLabel.setForeground(Color.RED);
+                log.info("User try type too long nickname.");
+            } else {
+                infoLabel.setText(" ");
+            }
+        }
+
     }
 
 }

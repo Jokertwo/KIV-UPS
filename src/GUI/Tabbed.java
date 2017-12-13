@@ -13,8 +13,9 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import action.EnterActionKey;
+import action.MaxLengthAction;
 import connection.Parser;
-import main.Main;
+import constants.Constants;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -33,7 +34,7 @@ public class Tabbed extends JPanel {
     private String addressee;
 
     private final Parser parser;
-    
+
     private final boolean isPublicChat;
 
     /**
@@ -42,7 +43,7 @@ public class Tabbed extends JPanel {
     private static final long serialVersionUID = 1L;
 
 
-    public Tabbed(JTabbedPane tabbedPane, String addressee, Parser parser,boolean isPublicChat) {
+    public Tabbed(JTabbedPane tabbedPane, String addressee, Parser parser, boolean isPublicChat) {
         log.info("Inicialization of new tab for " + addressee);
         this.tabbedPane = tabbedPane;
         this.addressee = addressee;
@@ -52,6 +53,7 @@ public class Tabbed extends JPanel {
         close.addActionListener(new CloseTab());
         send.addActionListener(new SendMessageButton());
         forWriting.addKeyListener(new EnterActionKey(send));
+        forWriting.addKeyListener(new MaxLengthAction(forWriting, Constants.MAX_MESSAGE_LENGTH));
         forReading.setLineWrap(true);
         forWriting.setLineWrap(true);
         setFont();
@@ -60,6 +62,11 @@ public class Tabbed extends JPanel {
 
     public String getAddressee() {
         return this.addressee;
+    }
+
+
+    public JButton getSend() {
+        return send;
     }
 
 
@@ -111,28 +118,35 @@ public class Tabbed extends JPanel {
         }
     }
 
-
     private class SendMessageButton implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String response = send();
-            if (response.equals(Main.codes.get("ok"))) {
+            if (send().equals(Constants.OK)) {
                 forReading.append("You : " + forWriting.getText() + "\n");
                 forWriting.setText("");
                 forWriting.grabFocus();
-            }
-            else{
-                log.warning("Error during send message to public chat. Server response " + response);
+            } else {
+                forReading.append("You : {MESSAGE WASN'T SEND, TRY TO AGAIN}" + forWriting.getText() + "\n");
+                forWriting.grabFocus();
             }
 
         }
-        
-        private String send(){
-            if(isPublicChat){
+
+
+        private String send() {
+            if (isPublicChat) {
+                for (int i = 0; i < 10; i++) {
+                    parser.sendPublicMessage(forWriting.getText());
+                }
                 return parser.sendPublicMessage(forWriting.getText());
+
+            } else {
+                for (int i = 0; i < 10; i++) {
+                    parser.sendPrivateMessage(addressee, forWriting.getText());
+                }
+                return parser.sendPrivateMessage(addressee, forWriting.getText());
             }
-            return parser.sendPrivateMessage(addressee, forWriting.getText());
         }
 
     }
