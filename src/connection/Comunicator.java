@@ -22,17 +22,17 @@ public class Comunicator {
     public Comunicator(String serverName, int serverPort, Parser parser) throws UnknownHostException, IOException {
 
         LOG.info("Establishing connection. Please wait ...");
-        socket = new Socket(serverName, serverPort);   
+        socket = new Socket(serverName, serverPort);
         LOG.info("Connected: " + socket);
-        
+
         start();
-        listen = new Reciever(streamIn,parser);
+        listen = new Reciever(streamIn, parser);
         listen.start();
         LOG.info("Listener(thread) begun listen.");
 
     }
-    
-   
+
+
     public String sendToServer(String line) {
         try {
             if (line.length() < 1023) {
@@ -53,7 +53,6 @@ public class Comunicator {
     }
 
 
-   
     public void start() throws IOException {
         streamOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         streamIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -61,6 +60,7 @@ public class Comunicator {
 
 
     public void stop() {
+        LOG.info("Closing stream");
         try {
             if (streamOut != null)
                 streamOut.close();
