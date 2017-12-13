@@ -120,14 +120,8 @@ public class Parser {
                 LOG.info("Recieve user list from server.");
                 splitUserList(message);
                 break;
-            case 7:
-                LOG.info("Recieve ok");
-                break;
-            case 8:
-                LOG.info("Recieve error");
-                break;
             case 9:
-                LOG.info("Server will be shotDown so try logOut");
+                LOG.info("Server will be shotDown so ByeBye :)");
                 new ShutdownServer(com);
                 break;
             default:
