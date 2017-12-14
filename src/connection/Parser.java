@@ -120,10 +120,10 @@ public class Parser {
         index = message.indexOf(Constants.SEPARATOR);
         String[] splitMessage = { message.substring(0, index), message.substring(index + 1, message.length()) };
         if (getTabMap().containsKey(splitMessage[0])) {
-            getTabMap().get(splitMessage[0]).appendText(splitMessage[0] + " : " + splitMessage[1] + "\n");
+            getTabMap().get(splitMessage[0]).appendText(splitMessage[0], splitMessage[1]);
         } else {
             window.addTab(splitMessage[0], splitMessage[0].equals(Constants.CHAT_ALL));
-            getTabMap().get(splitMessage[0]).appendText(splitMessage[0] + " : " + splitMessage[1] + "\n");
+            getTabMap().get(splitMessage[0]).appendText(splitMessage[0], splitMessage[1]);
         }
     }
 
@@ -139,10 +139,10 @@ public class Parser {
         String fromName = message.substring(1, index);
         message = message.substring(index + 1, message.length());
         if (getTabMap().containsKey(Constants.CHAT_ALL)) {
-            getTabMap().get(Constants.CHAT_ALL).appendText(fromName + " : " + message + "\n");
+            getTabMap().get(Constants.CHAT_ALL).appendText(fromName, message);
         } else {
             window.addTab(Constants.CHAT_ALL, true);
-            getTabMap().get(Constants.CHAT_ALL).appendText(fromName + " : " + message + "\n");
+            getTabMap().get(Constants.CHAT_ALL).appendText(fromName, message);
         }
     }
 

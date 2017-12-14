@@ -30,5 +30,7 @@ public class Constants {
 
     public static final char ERROR_USER_EXIST = '1';
     public static final char ERROR_MAX_USERS = '2';
+    public static final char ERROR_UNABLE_SEND_PRIVATE = '3';
+    public static final char ERROR_UNABLE_SEND_PUBLIC = '4';
 
 }

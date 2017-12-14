@@ -16,6 +16,7 @@ import javax.swing.text.JTextComponent;
 import action.EnterActionKey;
 import action.MaxLengthAction;
 import action.MyTimer;
+import connection.ErrorParser;
 import connection.Parser;
 import constants.Constants;
 import documentFilters.SemicolonsFilter;
@@ -115,21 +116,7 @@ public class LogInWindow extends JFrame {
 
     private void handleError(String response) {
         infoLabel.setForeground(Color.RED);
-        if (response.equals(Constants.ERROR)) {
-            log.warning("Unexpected default error here!");
-            return;
-        }
-        if (response.charAt(1) == Constants.ERROR_MAX_USERS) {
-            infoLabel.setText("Max capacity of server has been reached.");
-            log.info("Cant connect to server. Maximum capacity of server has been reached.");
-        }
-        if (response.charAt(1) == Constants.ERROR_USER_EXIST) {
-            infoLabel.setText("The name is already in use...");
-            log.info("Cant connect to server because the name/nick is already is use");
-        } else {
-            log.warning("Cant parse response from server : " + response);
-            return;
-        }
+        infoLabel.setText(new ErrorParser(response, log).toString());
         new MyTimer(infoLabel);
     }
 

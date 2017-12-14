@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import constants.Constants;
 
 
@@ -112,6 +113,11 @@ public class Reciever extends Thread {
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                "Fatal ERROR : Application will be closed.",
+                "Fatal error",
+                JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
         }
         return Constants.ERROR;
     }

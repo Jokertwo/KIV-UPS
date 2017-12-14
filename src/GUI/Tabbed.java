@@ -14,6 +14,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import action.EnterActionKey;
 import action.MaxLengthAction;
+import connection.ErrorParser;
 import connection.Parser;
 import constants.Constants;
 import main.Main;
@@ -71,8 +72,8 @@ public class Tabbed extends JPanel {
      * @param text
      *            zprava ze serveru
      */
-    public void appendText(String text) {
-        forReading.append(text);
+    public void appendText(String name, String text) {
+        forReading.append(String.format("%s : %s\n", name, text));
         forRsp.getVerticalScrollBar().setValue(forRsp.getVerticalScrollBar().getMaximum());
     }
 
@@ -170,12 +171,13 @@ public class Tabbed extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (send().equals(Constants.OK)) {
-                appendText("You : " + forWriting.getText() + "\n");
+            String result = send();
+            if (result.equals(Constants.OK)) {
+                appendText("You", forWriting.getText());
                 forWriting.setText("");
                 forWriting.grabFocus();
             } else {
-                forReading.append("You : {MESSAGE WASN'T SEND, TRY TO AGAIN}" + forWriting.getText() + "\n");
+                appendText("ERROR", new ErrorParser(result, log).toString());
                 forWriting.grabFocus();
             }
 

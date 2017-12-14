@@ -6,6 +6,12 @@ import javax.swing.JLabel;
 import javax.swing.Timer;
 
 
+/**
+ * Timer ktery po urcite dobe schova label
+ * 
+ * @author Petr
+ *
+ */
 public class MyTimer {
     private static final int DEFAULT_TIME = 4000;
 
