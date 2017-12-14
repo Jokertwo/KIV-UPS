@@ -3,8 +3,6 @@ package gui;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -22,6 +20,12 @@ import main.Main;
 import net.miginfocom.swing.MigLayout;
 
 
+/**
+ * Reprezentuje jednu zalozku chatu
+ * 
+ * @author Petr A15B0055K
+ *
+ */
 public class Tabbed extends JPanel {
 
     private static final Logger log = Logger.getLogger(Tabbed.class.getName());
@@ -40,9 +44,6 @@ public class Tabbed extends JPanel {
 
     private final boolean isPublicChat;
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
 
@@ -53,37 +54,52 @@ public class Tabbed extends JPanel {
         this.parser = parser;
         this.isPublicChat = isPublicChat;
         createChatPanel();
-        close.addActionListener(new CloseTab());
+        close.addActionListener(new CloseTab(this));
         send.addActionListener(new SendMessageButton());
         forWriting.addKeyListener(new EnterActionKey(send));
         forWriting.addKeyListener(new MaxLengthAction(forWriting, Constants.MAX_MESSAGE_LENGTH));
         forReading.setLineWrap(true);
         forWriting.setLineWrap(true);
         setFont();
-        
-        forRsp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {  
-            public void adjustmentValueChanged(AdjustmentEvent e) {  
-                e.getAdjustable().setValue(e.getAdjustable().getMaximum());  
-            }
-        });
+
     }
 
 
+    /**
+     * Pripoji text do textarea urcene pro cteni
+     * 
+     * @param text
+     *            zprava ze serveru
+     */
+    public void appendText(String text) {
+        forReading.append(text);
+        forRsp.getVerticalScrollBar().setValue(forRsp.getVerticalScrollBar().getMaximum());
+    }
+
+
+    /**
+     * Jmeno adresata
+     * 
+     * @return jmenu komu se bodou posilat zpravy
+     */
     public String getAddressee() {
         return this.addressee;
     }
 
 
+    /**
+     * Vraci tlacitko pro odeslani zpravy
+     * 
+     * @return
+     */
     public JButton getSend() {
         return send;
     }
 
 
-    public JTextArea getForReading() {
-        return this.forReading;
-    }
-
-
+    /**
+     * Nastavuje font
+     */
     private void setFont() {
         Font font = new Font(Font.MONOSPACED, Font.PLAIN, 19);
         forReading.setFont(font);
@@ -91,6 +107,9 @@ public class Tabbed extends JPanel {
     }
 
 
+    /**
+     * Vyvori panel se vsemi potrebnymi prvky a umisti je do okna
+     */
     private void createChatPanel() {
         setLayout(new MigLayout());
 
@@ -101,7 +120,21 @@ public class Tabbed extends JPanel {
         add(send, "w 100%");
     }
 
+    /**
+     * akce pro zavreni zalozky s chatem
+     * 
+     * @author Petr A15B0055K
+     *
+     */
     private class CloseTab implements ActionListener {
+        private Tabbed tab;
+
+
+        public CloseTab(Tabbed tab) {
+            this.tab = tab;
+        }
+
+
         @Override
         public void actionPerformed(ActionEvent e) {
             int n = JOptionPane.showConfirmDialog(
@@ -113,9 +146,9 @@ public class Tabbed extends JPanel {
                 ChatWindow frame = (ChatWindow) SwingUtilities.getAncestorOfClass(ChatWindow.class, tabbedPane);
                 if (frame != null) {
                     Map<String, Tabbed> tempMap = frame.getListOfOpenWindows();
+                    tempMap.remove(addressee);
                     if (tempMap.containsKey(addressee)) {
-                        tabbedPane.remove(tempMap.get(addressee));
-                        tempMap.remove(addressee);
+                        tabbedPane.remove(tab);
                         log.info("Removing tab :" + addressee);
                     }
                 } else {
@@ -127,12 +160,18 @@ public class Tabbed extends JPanel {
         }
     }
 
+    /**
+     * Akce tlacitka pro poslani zpravy
+     * 
+     * @author Petr A15B0055K
+     *
+     */
     private class SendMessageButton implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
             if (send().equals(Constants.OK)) {
-                forReading.append("You : " + forWriting.getText() + "\n");
+                appendText("You : " + forWriting.getText() + "\n");
                 forWriting.setText("");
                 forWriting.grabFocus();
             } else {
@@ -143,18 +182,24 @@ public class Tabbed extends JPanel {
         }
 
 
+        /**
+         * Posle zpravu for cykly v podmince IF probehnou pouze v testovacim modu ktery se spousti spustenim teto
+         * aplikace a argumentem(cislem)
+         * 
+         * @return
+         */
         private String send() {
             if (isPublicChat) {
                 if (Main.TEST) {
                     for (int i = 0; i < Main.NUMBER; i++) {
-                        parser.sendPublicMessage(forWriting.getText());
+                        parser.sendPublicMessage(forWriting.getText() + i);
                     }
                 }
                 return parser.sendPublicMessage(forWriting.getText());
             } else {
                 if (Main.TEST) {
                     for (int i = 0; i < Main.NUMBER; i++) {
-                        parser.sendPrivateMessage(addressee, forWriting.getText());
+                        parser.sendPrivateMessage(addressee, forWriting.getText() + i);
                     }
                 }
                 return parser.sendPrivateMessage(addressee, forWriting.getText());

@@ -5,6 +5,13 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 
 
+/**
+ * Dokument filter zakazujici zapsat do JTextComponent strednik Vyuyiva se pri prihlasovani na server protoze jinak by
+ * server nemohl rozparsovat zpravu
+ * 
+ * @author Petr A15B0055K
+ *
+ */
 public class SemicolonsFilter extends DocumentFilter {
 
     @Override

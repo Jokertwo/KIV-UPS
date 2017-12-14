@@ -7,6 +7,16 @@ import java.util.logging.Logger;
 import constants.Constants;
 
 
+/**
+ * Prijima zpravy se serveru
+ * 
+ * Jedna se o prodecunta
+ * 
+ * Navrhovy vzor producent - konzument (Konzumentem je trida Comunicator)
+ * 
+ * @author Petr A15B0055K
+ *
+ */
 public class Reciever extends Thread {
 
     private static final Logger LOG = Logger.getLogger(Reciever.class.getName());
@@ -23,6 +33,9 @@ public class Reciever extends Thread {
     }
 
 
+    /**
+     * nekonecna smycka naslouchani serveru
+     */
     @Override
     public void run() {
         while (true) {
@@ -49,6 +62,12 @@ public class Reciever extends Thread {
     }
 
 
+    /**
+     * pokud prijme notifikaci ulozi ji do pole a probudi konzumenta aby si ji mohl vyzvednout. Pokud prijme jinou
+     * zpravu zpracuje ji (preda tride parser)
+     * 
+     * @throws InterruptedException
+     */
     private synchronized void storeNotification() throws InterruptedException {
         temp = getFromServer();
         if (temp != null) {
@@ -66,6 +85,11 @@ public class Reciever extends Thread {
     }
 
 
+    /**
+     * Z teto metody konzument vybira notifikace na ktere ceka
+     * 
+     * @return
+     */
     public synchronized String getNotification() {
         int counter = 0;
         try {

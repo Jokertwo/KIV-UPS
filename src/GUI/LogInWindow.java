@@ -11,11 +11,11 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.Timer;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.JTextComponent;
 import action.EnterActionKey;
 import action.MaxLengthAction;
+import action.MyTimer;
 import connection.Parser;
 import constants.Constants;
 import documentFilters.SemicolonsFilter;
@@ -23,6 +23,12 @@ import documentListener.CheckEmptyTextField;
 import net.miginfocom.swing.MigLayout;
 
 
+/**
+ * Okno pro prihlaseni na server
+ * 
+ * @author Petr A15B0055K
+ *
+ */
 public class LogInWindow extends JFrame {
 
     private static final Logger log = Logger.getLogger(LogInWindow.class.getName());
@@ -120,25 +126,11 @@ public class LogInWindow extends JFrame {
         if (response.charAt(1) == Constants.ERROR_USER_EXIST) {
             infoLabel.setText("The name is already in use...");
             log.info("Cant connect to server because the name/nick is already is use");
-        }
-        else{
+        } else {
             log.warning("Cant parse response from server : " + response);
             return;
         }
-        hideText();
-    }
-
-
-    private void hideText() {
-        Timer t = new Timer(4000, new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                infoLabel.setText(" ");
-            }
-        });
-        t.setRepeats(false);
-        t.start();
+        new MyTimer(infoLabel);
     }
 
     private class MaxLengthLoginAction extends MaxLengthAction {
@@ -155,7 +147,7 @@ public class LogInWindow extends JFrame {
                 infoLabel.setText(toLongNick);
                 infoLabel.setForeground(Color.RED);
                 log.info("User try type too long nickname.");
-                hideText();
+                new MyTimer(infoLabel);
             }
         }
 

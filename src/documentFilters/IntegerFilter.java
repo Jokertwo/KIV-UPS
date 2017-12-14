@@ -5,6 +5,13 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 
 
+/**
+ * 
+ * Dokument filter zakazujici zapsat do JTextComponent neco jineho nez integer
+ * 
+ * @author Petr A15B0055K
+ *
+ */
 public class IntegerFilter extends DocumentFilter {
 
     @Override

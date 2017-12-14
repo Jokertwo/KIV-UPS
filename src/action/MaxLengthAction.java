@@ -6,6 +6,12 @@ import java.util.logging.Logger;
 import javax.swing.text.JTextComponent;
 
 
+/**
+ * Nedovoli do JTextComponent zapsat vice znaku nez kolik je preddefinovano
+ * 
+ * @author Petr
+ *
+ */
 public class MaxLengthAction implements KeyListener {
 
     protected JTextComponent component;

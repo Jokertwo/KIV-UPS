@@ -7,6 +7,13 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
 
+/**
+ * Document listener nasloucho JTextComponent a kontroluje jestli je prazdna nebo ne. (jestli uz nekdo neco zapsal nebo
+ * se snazi poslat prazdnou zpravu)
+ * 
+ * @author Petr A15B0055K
+ *
+ */
 public class CheckEmptyTextField implements DocumentListener {
 
     JButton loginButton;
@@ -33,6 +40,7 @@ public class CheckEmptyTextField implements DocumentListener {
     public void changedUpdate(DocumentEvent e) {
         loginButton.setEnabled(checkDocument(e));
     }
+
 
     private boolean checkDocument(DocumentEvent e) {
         PlainDocument document = (PlainDocument) e.getDocument();

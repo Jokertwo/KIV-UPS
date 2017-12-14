@@ -13,6 +13,13 @@ import gui.ChatWindow;
 import gui.Tabbed;
 
 
+/**
+ * Mezi kus mezi GUI a komunikaci se serverem naformatuje zpravu do potrebneho tvaru nebo naopak zpracuje prijatou
+ * zpravu
+ * 
+ * @author Petr A15B0055K
+ *
+ */
 public class Parser {
 
     private static final Logger LOG = Logger.getLogger(Parser.class.getName());
@@ -52,54 +59,100 @@ public class Parser {
     }
 
 
+    /**
+     * Prihlaseni na server tvar zpravy >> 4name <<
+     * 
+     * @param name
+     *            jmeno pod kterym se prihlasuji
+     * @return vraci notifikaci
+     */
     public String logIn(String name) {
         return com.sendToServer(appendSize(Constants.LOG_IN + name));
     }
 
 
+    /**
+     * Odhlaseni ze serveru tvar zpravy >> 5name <<
+     * 
+     * @return vraci notifikaci
+     */
     public String logOut() {
         return com.sendToServer(appendSize(Constants.LOG_OUT + this.name));
     }
 
 
+    /**
+     * Posle soukromou zpravu danemu uzivateli, tvar zpravy >> 2toUser;name;message <<
+     * 
+     * @param toUser
+     *            komu se ma zprava poslat
+     * @param message
+     *            zprava ktera se ma poslat
+     * @return vraci notifikaci
+     */
     public String sendPrivateMessage(String toUser, String message) {
         return com.sendToServer(appendSize(
             Constants.PRIVATE + toUser + Constants.SEPARATOR + this.name + Constants.SEPARATOR + message));
     }
 
 
+    /**
+     * Posle verejnou zpravu vsem uzivatelum, tvar zpravy >> 1name;message
+     * 
+     * @param message
+     *            zprava ktera se ma poslat
+     * @return vraci notifikaci
+     */
     public String sendPublicMessage(String message) {
         return com.sendToServer(appendSize(Constants.ALL + this.name + Constants.SEPARATOR + message));
     }
 
 
+    /**
+     * Zpracuje soukromou zpravu. Rozparsuje ji a preda gui
+     * 
+     * @param message
+     *            zprava prijata ze serveru
+     */
     public void recievePrivateMessage(String message) {
         int index = message.indexOf(Constants.SEPARATOR);
         message = message.substring(index + 1, message.length());
         index = message.indexOf(Constants.SEPARATOR);
         String[] splitMessage = { message.substring(0, index), message.substring(index + 1, message.length()) };
         if (getTabMap().containsKey(splitMessage[0])) {
-            getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
+            getTabMap().get(splitMessage[0]).appendText(splitMessage[0] + " : " + splitMessage[1] + "\n");
         } else {
             window.addTab(splitMessage[0], splitMessage[0].equals(Constants.CHAT_ALL));
-            getTabMap().get(splitMessage[0]).getForReading().append(splitMessage[0] + " : " + splitMessage[1] + "\n");
+            getTabMap().get(splitMessage[0]).appendText(splitMessage[0] + " : " + splitMessage[1] + "\n");
         }
     }
 
 
+    /**
+     * Zpracuje verejnou/public zpravu. Rozparsuje ji a preda gui.
+     * 
+     * @param message
+     *            zprava prijata ze serveru
+     */
     private void recievePublicMessage(String message) {
         int index = message.indexOf(Constants.SEPARATOR);
         String fromName = message.substring(1, index);
         message = message.substring(index + 1, message.length());
         if (getTabMap().containsKey(Constants.CHAT_ALL)) {
-            getTabMap().get(Constants.CHAT_ALL).getForReading().append(fromName + " : " + message + "\n");
+            getTabMap().get(Constants.CHAT_ALL).appendText(fromName + " : " + message + "\n");
         } else {
             window.addTab(Constants.CHAT_ALL, true);
-            getTabMap().get(Constants.CHAT_ALL).getForReading().append(fromName + " : " + message + "\n");
+            getTabMap().get(Constants.CHAT_ALL).appendText(fromName + " : " + message + "\n");
         }
     }
 
 
+    /**
+     * Identifikuje druh zpravy prijate ze serveru
+     * 
+     * @param message
+     *            zprava prijata ze serveru
+     */
     public void parseMessage(String message) {
         int i = Character.getNumericValue(message.charAt(0));
 
@@ -132,9 +185,17 @@ public class Parser {
     }
 
 
-    private String appendSize(String line) {
+    /**
+     * Spocita jak je zprava velka a pripoji tuto informaci pred zpravu. Pripojuje vzdy 4-mistne cislo. Pokud je cislo
+     * mensi doplni nuly
+     * 
+     * @param message
+     *            zprava ktera se ma poslat na server
+     * @return vraci puvodni ypravu obohacenou o infomaci o tom jak je velka/dlouha
+     */
+    private String appendSize(String message) {
         StringBuilder sb = new StringBuilder();
-        String a = String.valueOf(line.length() + 1 + 4);
+        String a = String.valueOf(message.length() + 1 + 4);
 
         if (a.length() < 5) {
             for (int i = 0; i < 4 - a.length(); i++) {
@@ -142,10 +203,15 @@ public class Parser {
             }
             sb.append(a);
         }
-        return sb.toString() + line;
+        return sb.toString() + message;
     }
 
 
+    /**
+     * Zpracuje zpravu obsahujici seznam aktualne pripojenych clientu. A sestavy strom kde jsou clienti ulozeni
+     * 
+     * @param message
+     */
     private void splitUserList(String message) {
         cleanTree();
         addUser(Constants.CHAT_ALL);
@@ -159,6 +225,9 @@ public class Parser {
     }
 
 
+    /**
+     * Vycisti strom / vymaze ho
+     */
     private void cleanTree() {
         DefaultTreeModel model = (DefaultTreeModel) users.getModel();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
@@ -166,6 +235,12 @@ public class Parser {
     }
 
 
+    /**
+     * Prida clienta do stromu
+     * 
+     * @param name
+     *            jmeno clienta
+     */
     private void addUser(String name) {
         DefaultTreeModel model = (DefaultTreeModel) users.getModel();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
