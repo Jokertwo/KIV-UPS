@@ -14,7 +14,6 @@
 #include"Server.h"
 
 int number_of_client = 0;
-char buf[BUFFER_SIZE];
 typedef struct {
 	int socket;
 	char login[10];
@@ -82,26 +81,26 @@ int main(int argc, char *argv[]) {
  * This will handle connection for each client
  * */
 void *connection_handler(void *socket_desc) {
-
 	//Get the socket descriptor
 	int sock = *(int*) socket_desc;
 	int size;
 
-	char sendedSize[4];
+	char sendedSize[5];
+	char buf[BUFFER_SIZE];
 
 	//Receive a message from client
 	while (1) {
 
-		memset(buf, 0, BUFFER_SIZE);
-		memset(sendedSize, 0, 4);
+		memset(buf, '\0', sizeof(buf));
+		memset(sendedSize, '\0', sizeof(sendedSize));
 		size = recv(sock, buf, BUFFER_SIZE, 0);
 
-		strncpy(sendedSize, buf, 4);
-		while (getSize(sendedSize) > size) {
+		strncpy(sendedSize, buf, sizeof(sendedSize));
+		sendedSize[sizeof(sendedSize)-1] = '\0';
+
+		//if message is not hole, wait for left
+		while (atoi(sendedSize) > size) {
 			size = recv(sock, buf + size, BUFFER_SIZE, 0);
-		}
-		if (getSize(sendedSize) < size) {
-			break;
 		}
 
 		if (size < 0) {
@@ -113,31 +112,29 @@ void *connection_handler(void *socket_desc) {
 		} else {
 			if (parseMessage(sock, buf + 4, size - 4) == LOGOUT) {
 				printf("Client disconnect\n");
-				printf("Left clients : %d", number_of_client);
+				printf("Left clients : %d\n", number_of_client);
 				break;
 			}
 		}
 	}
+
 	printf("exit thread\n");
 	return 0;
 
 }
+/**
+ * Handle CTRL+C
+ */
 void shotdownServer(int sig) {
 	printf("Server will be shotDown. \n");
-	parseMessage(0,"9",0);
+	parseMessage(0, "9", 0);
 	(void) signal(SIGINT, SIG_DFL);
 	exit(0);
 
 }
-
-int getSize(char* number) {
-	int i;
-	if ((i = atoi(number)) != 0) {
-		return i;
-	}
-	return -1;
-}
-
+/**
+ * parse received message
+ */
 int parseMessage(int sock, char *message, int size) {
 	printf("Server received : %s", message);
 	pthread_mutex_lock(&mutex);
@@ -148,7 +145,7 @@ int parseMessage(int sock, char *message, int size) {
 		case 1:
 			if (send_to_all(size, message, sock) == FALSE) {
 				error_log("Error during send message to all. \n Message : %s",message +1)
-				send_error(sock);
+				send_error(sock,ERROR_DEFAULT);
 				pthread_mutex_unlock(&mutex);
 				return FALSE;
 			}
@@ -158,7 +155,7 @@ int parseMessage(int sock, char *message, int size) {
 		case 2:
 			if (send_private_message(message, size) == FALSE) {
 				error_log("Can't send private message : %s",message);
-				send_error(sock);
+				send_error(sock,ERROR_DEFAULT);
 				pthread_mutex_unlock(&mutex);
 				return FALSE;
 			}
@@ -167,16 +164,21 @@ int parseMessage(int sock, char *message, int size) {
 			return TRUE;
 		case 3:
 			if (send_ping(sock) == FALSE) {
-				error_log("Can't send ping to : %s", message +1);
+				error_log("Can't send ping to : %s \n", message +1);
 				pthread_mutex_unlock(&mutex);
 				return FALSE;
 			}
 			pthread_mutex_unlock(&mutex);
 			return TRUE;
 		case 4:
+			if (number_of_client >= MAX_USER) {
+				send_error(sock, ERROR_MAX_USERS);
+				pthread_mutex_unlock(&mutex);
+				return FALSE;
+			}
 			if (add_new_client(sock, message, size) == FALSE) {
-				error_log("Can't create new user. User with name %s exist",message+1);
-				send_error(sock);
+				error_log("Can't create new user. User with name %s exist \n",message+1);
+				send_error(sock, ERROR_USER_EXIST);
 				pthread_mutex_unlock(&mutex);
 				return FALSE;
 			}
@@ -188,7 +190,7 @@ int parseMessage(int sock, char *message, int size) {
 		case 5:
 			if (remove_client(sock, message + 1) == FALSE) {
 				error_log("Can't logout client %s because I can't find his index",message+1);
-				send_error(sock);
+				send_error(sock, ERROR_DEFAULT);
 				pthread_mutex_unlock(&mutex);
 				return FALSE;
 			}
@@ -221,7 +223,9 @@ int parseMessage(int sock, char *message, int size) {
 	}
 	return 0;
 }
-
+/**
+ * Add new user to array where are store all users
+ */
 int add_new_client(int sock, char *name, int size) {
 	if ((check_if_exist(name + 1) == FALSE) && (MAX_USER > number_of_client)) {
 		memset(clients[number_of_client].login, 0, 10);
@@ -233,11 +237,19 @@ int add_new_client(int sock, char *name, int size) {
 		return FALSE;
 	}
 }
+/**
+ * Inform others users that new user
+ * come online
+ */
 void informAboutConnectClient() {
 	for (int i = 0; i < number_of_client; i++) {
 		send_user_list(clients[i].socket);
 	}
 }
+/**
+ * Remove client from array where are
+ * store all users
+ */
 int remove_client(int sock, char *name) {
 	int index;
 	if ((index = get_client_index(name)) == FALSE) {
@@ -252,6 +264,10 @@ int remove_client(int sock, char *name) {
 	}
 	return TRUE;
 }
+/**
+ * Return index of user by name from
+ * array where are store all users
+ */
 int get_client_index(char *name) {
 	name[strlen(name) - 1] = '\0';
 	for (int i = 0; i < number_of_client; i++) {
@@ -262,19 +278,28 @@ int get_client_index(char *name) {
 	error_log("Can't find user index.");
 	return FALSE;
 }
-
+/**
+ * Send ok notification to user
+ */
 int send_ok(int sock) {
 	if (send(sock, OK_S, 2, 0) < 0) {
 		return FALSE;
 	}
 	return TRUE;
 }
-int send_error(int sock) {
-	if (send(sock, ERROR_S, 2, 0) < 0) {
+/**
+ * Send specific error notification to user
+ */
+int send_error(int sock, char* kindOfError) {
+	if (send(sock, kindOfError, 3, 0) < 0) {
 		return FALSE;
 	}
 	return TRUE;
 }
+/**
+ * Check if with name exist or not
+ * if exist return TRUE
+ */
 int check_if_exist(char *name) {
 	name[strlen(name) - 1] = '\0';
 	for (int i = 0; i < number_of_client; i++) {
@@ -284,13 +309,18 @@ int check_if_exist(char *name) {
 	}
 	return FALSE;
 }
+/**
+ * for debug
+ */
 void print_all() {
 	for (int i = 0; i < number_of_client; i++) {
 		printf("%s,", clients[i].login);
 
 	}
 }
-
+/**
+ * Send public message
+ */
 int send_to_all(int size, char *buffer, int socket) {
 	for (int i = 0; i < number_of_client; i++) {
 		if (clients[i].socket == socket) {
@@ -303,13 +333,16 @@ int send_to_all(int size, char *buffer, int socket) {
 	}
 	return TRUE;
 }
+/**
+ * Send list with logged users
+ */
 int send_user_list(int socket) {
 	char *temp;
 	int length_of_logins = 0;
 
 	for (int i = 0; i < number_of_client; i++) {
 		if (clients[i].socket != socket) {
-			length_of_logins += strlen(clients[i].login) + 1;
+			length_of_logins += strlen(clients[i].login) + 2;
 		}
 	}
 	temp = calloc(length_of_logins + 1, sizeof(char));
@@ -330,6 +363,10 @@ int send_user_list(int socket) {
 	return TRUE;
 
 }
+/**
+ * send ping
+ * not used
+ */
 int send_ping(int socket) {
 
 	if (send(socket, PING_S, 2, 0) < 0) {
@@ -337,6 +374,9 @@ int send_ping(int socket) {
 	}
 	return TRUE;
 }
+/**
+ * send private message to specific user
+ */
 int send_private_message(char *message, int size) {
 	int size_of_name;
 	int index;
@@ -360,6 +400,10 @@ int send_private_message(char *message, int size) {
 
 	return FALSE;
 }
+/**
+ * send to all users message that server
+ * will be shutDown
+ */
 int logOutAll() {
 	if (send_to_all(1, "9", -1) == TRUE) {
 		return TRUE;

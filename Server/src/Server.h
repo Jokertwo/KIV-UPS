@@ -8,16 +8,17 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
-
 #endif /* SERVER_H_ */
-
 
 #define BUFFER_SIZE 1024
 #define MAX_USER 20
 
 #define OK_S "7\n"
-#define ERROR_S "8\n"
 #define PING_S "6\n"
+
+#define ERROR_DEFAULT "80\n"
+#define ERROR_USER_EXIST "81\n"
+#define ERROR_MAX_USERS "82\n"
 
 #define SEPARATOR ';'
 
@@ -36,7 +37,7 @@ int remove_client(int sock, char *name);
 int send_to_all(int size, char *buffer, int socket);
 int send_private_message(char *message, int size);
 int send_ok(int sock);
-int send_error(int sock);
+int send_error(int sock, char* kindOfError);
 int get_client_index(char *name);
 int check_if_exist(char *name);
 void print_all(void);
