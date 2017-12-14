@@ -24,10 +24,25 @@ pthread_mutex_t mutex;
 pthread_rwlock_t lock;
 
 int main(int argc, char *argv[]) {
+	int port = 8882;
 
 	if (pthread_rwlock_init(&lock, NULL) != 0) {
 		error_log("Cant inicialize rw_lock server cant start.\n");
 		exit(2);
+	}
+	int test;
+	if (argc == 2) {
+		if ((test = atoi(argv[1])) != 0) {
+			if (test > 0) {
+				port = test;
+				printf("Set port %d\n", port);
+			} else {
+				error_log("Wrong argument %s\n",argv[1])
+			}
+		} else {
+			error_log("Wrong argument %s\n",argv[1])
+		}
+
 	}
 
 	(void) signal(SIGINT, shotdownServer);
@@ -45,7 +60,7 @@ int main(int argc, char *argv[]) {
 	//Prepare the sockaddr_in structure
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
-	server.sin_port = htons(8882);
+	server.sin_port = htons(port);
 
 	//Bind
 	if (bind(socket_desc, (struct sockaddr *) &server, sizeof(server)) < 0) {
