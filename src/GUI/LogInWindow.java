@@ -11,6 +11,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.JTextComponent;
 import action.EnterActionKey;
@@ -92,18 +93,52 @@ public class LogInWindow extends JFrame {
                 String userName = loginNameTF.getText();
                 String responseFromServer = parser.logIn(userName);
                 if (responseFromServer.equals(Constants.OK)) {
+                    parser.setName(userName);
+                    log.info("Create and showing ChatWindow.");
                     ChatWindow chat = new ChatWindow(parser);
                     chat.setVisible(true);
-                    log.info("Create and showing ChatWindow.");
                     setVisible(false);
                     log.info("Hidding LogIn window");
-                    parser.setName(userName);
-                } else if (responseFromServer.equals(Constants.ERROR)) {
-                    infoLabel.setForeground(Color.RED);
-                    infoLabel.setText("The name is already in use...");
+                } else {
+                    handleError(responseFromServer);
                 }
             }
         });
+    }
+
+
+    private void handleError(String response) {
+        infoLabel.setForeground(Color.RED);
+        if (response.equals(Constants.ERROR)) {
+            log.warning("Unexpected default error here!");
+            return;
+        }
+        if (response.charAt(1) == Constants.ERROR_MAX_USERS) {
+            infoLabel.setText("Max capacity of server has been reached.");
+            log.info("Cant connect to server. Maximum capacity of server has been reached.");
+        }
+        if (response.charAt(1) == Constants.ERROR_USER_EXIST) {
+            infoLabel.setText("The name is already in use...");
+            log.info("Cant connect to server because the name/nick is already is use");
+        }
+        else{
+            log.warning("Cant parse response from server : " + response);
+            return;
+        }
+        hideText();
+    }
+
+
+    private void hideText() {
+        Timer t = new Timer(4000, new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                infoLabel.setText(" ");
+            }
+        });
+        t.setRepeats(false);
+        t.start();
     }
 
     private class MaxLengthLoginAction extends MaxLengthAction {
@@ -120,8 +155,7 @@ public class LogInWindow extends JFrame {
                 infoLabel.setText(toLongNick);
                 infoLabel.setForeground(Color.RED);
                 log.info("User try type too long nickname.");
-            } else {
-                infoLabel.setText(" ");
+                hideText();
             }
         }
 

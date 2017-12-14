@@ -53,7 +53,7 @@ public class Reciever extends Thread {
         temp = getFromServer();
         if (temp != null) {
             LOG.info("Recieve from serever : '" + temp + "'");
-            if (temp.equals(Constants.OK) || temp.equals(Constants.ERROR)) {
+            if (temp.charAt(0) == Constants.ERROR.toCharArray()[0] || temp.equals(Constants.OK)) {
                 messages.add(temp);
                 notify();
             } else {

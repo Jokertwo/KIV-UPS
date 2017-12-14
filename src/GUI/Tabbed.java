@@ -3,6 +3,8 @@ package gui;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -16,6 +18,7 @@ import action.EnterActionKey;
 import action.MaxLengthAction;
 import connection.Parser;
 import constants.Constants;
+import main.Main;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -57,6 +60,12 @@ public class Tabbed extends JPanel {
         forReading.setLineWrap(true);
         forWriting.setLineWrap(true);
         setFont();
+        
+        forRsp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {  
+            public void adjustmentValueChanged(AdjustmentEvent e) {  
+                e.getAdjustable().setValue(e.getAdjustable().getMaximum());  
+            }
+        });
     }
 
 
@@ -136,8 +145,18 @@ public class Tabbed extends JPanel {
 
         private String send() {
             if (isPublicChat) {
+                if (Main.TEST) {
+                    for (int i = 0; i < Main.NUMBER; i++) {
+                        parser.sendPublicMessage(forWriting.getText());
+                    }
+                }
                 return parser.sendPublicMessage(forWriting.getText());
             } else {
+                if (Main.TEST) {
+                    for (int i = 0; i < Main.NUMBER; i++) {
+                        parser.sendPrivateMessage(addressee, forWriting.getText());
+                    }
+                }
                 return parser.sendPrivateMessage(addressee, forWriting.getText());
             }
         }

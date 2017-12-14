@@ -11,9 +11,13 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import connection.Parser;
 import constants.Constants;
+import main.Main;
 import net.miginfocom.swing.MigLayout;
 
 
@@ -31,7 +35,7 @@ public class ChatWindow extends JFrame {
 
     public ChatWindow(Parser parser) {
         this.parser = parser;
-        setTitle("Chat");
+        setTitle("");
         initTree();
         parser.setUsers(users);
         parser.setChatWindow(this);
@@ -39,7 +43,6 @@ public class ChatWindow extends JFrame {
         setSize(600, 500);
         add(tabbedPane, "w 80% , h 100%");
         add(users, " w 20%, h 100%");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {
             @Override
@@ -48,8 +51,17 @@ public class ChatWindow extends JFrame {
                 parser.logOut();
                 System.exit(1);
             }
-
         });
+    }
+
+
+    @Override
+    public void setTitle(String title) {
+        String newTitle = "Chat window (" + parser.getName() + ")";
+        if (Main.TEST) {
+            newTitle += " ---TEST MOD---";
+        }
+        super.setTitle(newTitle);
     }
 
 
@@ -61,16 +73,39 @@ public class ChatWindow extends JFrame {
     public void addTab(String addressee, boolean isPublicChat) {
         Tabbed tab = new Tabbed(tabbedPane, addressee, parser, isPublicChat);
         tabbedPane.add(addressee, tab);
-        int count = tabbedPane.getTabCount();
-        count = (count > 0) ? count - 1 : count;
-        tabbedPane.setSelectedIndex(count);
         listOfOpenWidows.put(addressee, tab);
         log.info("Open new tab for user : " + addressee);
     }
 
 
-    private void initTree() {
+    public void boldTitle(String title, Tabbed tab) {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            if (SwingUtilities.isDescendingFrom(tab, tabbedPane.getComponentAt(i))) {
+                if (tabbedPane.getSelectedIndex() != i) {
+                    tabbedPane.setTitleAt(i, bold(title));
+                }
+                break;
+            }
+        }
+    }
 
+
+    public void normalizeTitle() {
+        tabbedPane.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(),
+                    ((Tabbed) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getAddressee());
+            }
+        });
+    }
+
+
+    public String bold(String title) {
+        return "<html><b>" + title + "</b></html>";
+    }
+
+
+    private void initTree() {
         // create the root node
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("");
         root.add(new DefaultMutableTreeNode("All"));
