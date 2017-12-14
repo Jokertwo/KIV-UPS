@@ -152,7 +152,7 @@ int parseMessage(int sock, char *message, int size) {
 			pthread_rwlock_rdlock(&lock);
 			if (send_to_all(size, message, sock) == FALSE) {
 				error_log("Error during send message to all. \n Message : %s",message +1)
-				send_error(sock, ERROR_DEFAULT);
+				send_error(sock, ERROR_UNABLE_SEND_PUBLIC);
 				pthread_rwlock_unlock(&lock);
 				return FALSE;
 			}
@@ -163,7 +163,7 @@ int parseMessage(int sock, char *message, int size) {
 			pthread_rwlock_rdlock(&lock);
 			if (send_private_message(message, size) == FALSE) {
 				error_log("Can't send private message : %s",message);
-				send_error(sock, ERROR_DEFAULT);
+				send_error(sock, ERROR_UNABLE_SEND_PRIVATE);
 				pthread_rwlock_unlock(&lock);
 				return FALSE;
 			}
@@ -200,7 +200,7 @@ int parseMessage(int sock, char *message, int size) {
 		case 5:
 			pthread_rwlock_wrlock(&lock);
 			if (remove_client(sock, message + 1) == FALSE) {
-				error_log("Can't logout client %s because I can't find his index",message+1);
+				error_log("Can't logout client %s because I can't find his index \n",message+1);
 				send_error(sock, ERROR_DEFAULT);
 				pthread_rwlock_unlock(&lock);
 				return FALSE;

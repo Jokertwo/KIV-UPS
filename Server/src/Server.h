@@ -19,6 +19,8 @@
 #define ERROR_DEFAULT "80\n"
 #define ERROR_USER_EXIST "81\n"
 #define ERROR_MAX_USERS "82\n"
+#define ERROR_UNABLE_SEND_PRIVATE "83\n"
+#define ERROR_UNABLE_SEND_PUBLIC "84\n"
 
 #define SEPARATOR ';'
 
